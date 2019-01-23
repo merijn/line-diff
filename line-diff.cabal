@@ -33,6 +33,7 @@ Executable line-diff
   Other-Modules:      
 
   Build-Depends:        base
+               ,        bytestring == 0.10.*
                ,        Diff == 0.3.*
                ,        conduit == 1.3.*
                ,        prettyprinter == 1.2.*
