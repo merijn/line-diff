@@ -61,30 +61,22 @@ lineDiff = C.mapMaybe diffUnequal
     diffText = getGroupedDiff `on` T.unpack
 
 printDiff :: MonadIO m => [Diff Text] -> m ()
-printDiff diffs = liftIO $ do
-    prettyPrint old
-    prettyPrint new
+printDiff = liftIO . prettyPrint . collapse
   where
-    old, new :: Doc AnsiStyle
-    (old, new) = collapse mempty diffs
-
     layoutStyle :: LayoutOptions
     layoutStyle = P.defaultLayoutOptions{P.layoutPageWidth = Unbounded}
 
     prettyPrint :: Doc AnsiStyle -> IO ()
     prettyPrint = T.putStrLn . P.renderStrict . P.layoutPretty layoutStyle
 
-    collapse
-        :: (Doc AnsiStyle, Doc AnsiStyle)
-        -> [Diff Text]
-        -> (Doc AnsiStyle, Doc AnsiStyle)
-    collapse result [] = result
-    collapse prefix (d:ds) = collapse (prefix <> chunk) ds
+    collapse :: [Diff Text] -> Doc AnsiStyle
+    collapse [] = mempty
+    collapse (d:ds) = chunk <> collapse ds
       where
         chunk = case d of
-            Both x y -> (P.pretty x, P.pretty y)
-            First t -> (P.annotate (P.color Red) $ P.pretty t, mempty)
-            Second t -> (mempty, P.annotate (P.color Green) $ P.pretty t)
+            Both t _ -> P.pretty t
+            First t -> P.annotate (P.color Red) . P.pretty $ t
+            Second t -> P.annotate (P.color Green) . P.pretty $ t
 
 main :: IO ()
 main = do
